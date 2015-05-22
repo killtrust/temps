@@ -1,34 +1,34 @@
 #include "includes.h"
 #include "global.h"
 #include "fonctions.h"
-
+ 
 /**
  * \fn void initStruct(void)
  * \brief Initialisation des structures de l'application (tâches, mutex, 
  * semaphore, etc.)
  */
 void initStruct(void);
-
+ 
 /**
  * \fn void startTasks(void)
  * \brief Démarrage des tâches
  */
 void startTasks(void);
-
+ 
 /**
  * \fn void deleteTasks(void)
  * \brief Arrêt des tâches
  */
 void deleteTasks(void);
-
+ 
 int main(int argc, char**argv) {
     printf("#################################\n");
     printf("#      DE STIJL PROJECT         #\n");
     printf("#################################\n");
-
+ 
     //signal(SIGTERM, catch_signal);
     //signal(SIGINT, catch_signal);
-
+ 
     /* Avoids memory swapping for this program */
     mlockall(MCL_CURRENT | MCL_FUTURE);
     /* For printing, please use rt_print_auto_init() and rt_printf () in rtdk.h
@@ -46,12 +46,12 @@ int main(int argc, char**argv) {
     startTasks();
     pause();
     deleteTasks();
-
+ 
     return 0;
 }
-
+ 
 // creer err mutexCpt
-
+ 
 void initStruct(void) {
     int err;
     /* Creation des mutex */
@@ -63,13 +63,36 @@ void initStruct(void) {
         rt_printf("Error mutex create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-
+     
+    /*if (err= rt_mutex_create(&mutexRobot, NULL)) {
+        rt_printf("Error mutext create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+     */
+    if (err= rt_mutex_create(&mutexCpt, NULL)) {
+        rt_printf("Error mutext create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    if (err= rt_mutex_create(&mutexRobot, NULL)) {
+        rt_printf("Error mutext create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+ 
+    if (err= rt_mutex_create(&mutexCom, NULL)) {
+        rt_printf("Error mutext create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
     /* Creation du semaphore */
     if (err = rt_sem_create(&semConnecterRobot, NULL, 0, S_FIFO)) {
         rt_printf("Error semaphore create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-
+    
+    if (err = rt_sem_create(&semConnectedRobot, NULL, 0, S_FIFO)) {
+        rt_printf("Error semaphore create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+ 
     /* Creation des taches */
     if (err = rt_task_create(&tServeur, NULL, 0, PRIORITY_TSERVEUR, 0)) {
         rt_printf("Error task create: %s\n", strerror(-err));
@@ -87,19 +110,27 @@ void initStruct(void) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-
+    if (err = rt_task_create(&tbatterie, NULL, 0, PRIORITY_TBATTERIE, 0)) {
+        rt_printf("Error task create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_create(&twatchdog, NULL, 0, PRIORITY_TWATCHDOG, 0)) {
+        rt_printf("Error task create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+ 
     /* Creation des files de messages */
     if (err = rt_queue_create(&queueMsgGUI, "toto", MSG_QUEUE_SIZE*sizeof(DMessage), MSG_QUEUE_SIZE, Q_FIFO)){
         rt_printf("Error msg queue create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-
+ 
     /* Creation des structures globales du projet */
     robot = d_new_robot();
     move = d_new_movement();
     serveur = d_new_server();
 }
-
+ 
 void startTasks() {
     int err;
     if (err = rt_task_start(&tconnect, &connecter, NULL)) {
@@ -118,11 +149,21 @@ void startTasks() {
         rt_printf("Error task start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-
+ 
+    if (err = rt_task_start(&tbatterie, &batterie, NULL)) {
+        rt_printf("Error task start: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    /*if (err = rt_task_start(&twatchdog, &watchdog, NULL)) {
+        rt_printf("Error task start: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }*/
 }
-
+ 
 void deleteTasks() {
     rt_task_delete(&tServeur);
     rt_task_delete(&tconnect);
     rt_task_delete(&tmove);
+    rt_task_delete(&tbatterie);
+    rt_task_delete(&twatchdog);
 }

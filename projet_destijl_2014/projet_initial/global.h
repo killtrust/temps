@@ -15,13 +15,19 @@ extern RT_TASK tServeur;
 extern RT_TASK tconnect;
 extern RT_TASK tmove;
 extern RT_TASK tenvoyer;
+extern RT_TASK tbatterie;
+extern RT_TASK twatchdog;
 
 /* @descripteurs des mutex */
 extern RT_MUTEX mutexEtat;
 extern RT_MUTEX mutexMove;
-
+extern RT_MUTEX mutexCpt;
+extern RT_MUTEX mutexRobot;
+extern RT_MUTEX mutexCom;
+//extern RT_MUTEX mutexRobot;
 /* @descripteurs des sempahore */
 extern RT_SEM semConnecterRobot;
+extern RT_SEM semConnectedRobot;
 
 /* @descripteurs des files de messages */
 extern RT_QUEUE queueMsgGUI;
@@ -33,12 +39,15 @@ extern DServer *serveur;
 extern DRobot *robot;
 extern DMovement *move;
 
+
 /* @constantes */
 extern int MSG_QUEUE_SIZE;
 extern int PRIORITY_TSERVEUR;
 extern int PRIORITY_TCONNECT;
 extern int PRIORITY_TMOVE;
 extern int PRIORITY_TENVOYER;
-
+extern int PRIORITY_TBATTERIE;
+extern int PRIORITY_TWATCHDOG;
+extern int cpt_perte_com;
 #endif	/* GLOBAL_H */
 
